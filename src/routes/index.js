@@ -293,3 +293,12 @@ chatRouter.put('/messages/:msgId',                chatController.editMessage);
 chatRouter.delete('/messages/:msgId',             chatController.deleteMessage);
 chatRouter.post('/messages/:msgId/react',         chatController.reactToMessage);
 router.use('/chat', chatRouter);
+
+// ─── CUSTOMER SUPPORT ────────────────────────────────────────────────────────
+const supportController = require('../controllers/support.controller');
+const supportRouter = express.Router();
+supportRouter.get('/tickets', supportController.getTickets);
+supportRouter.post('/tickets', supportController.createTicket);
+supportRouter.get('/tickets/:id/messages', supportController.getMessages);
+supportRouter.post('/tickets/:id/messages', supportController.sendMessage);
+router.use('/support', supportRouter);

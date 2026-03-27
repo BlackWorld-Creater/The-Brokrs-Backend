@@ -1,0 +1,129 @@
+{
+  "tickets": [
+    {
+      "id": "1774609531641",
+      "category": "Orders and Delivery",
+      "title": "Delivery Tracking",
+      "description": "New user inquiry.",
+      "status": "Open",
+      "createdAt": 1774609531641,
+      "updatedAt": 1774609556323
+    },
+    {
+      "id": "1774609667797",
+      "category": "Orders and Delivery",
+      "title": "Delivery Tracking",
+      "description": "New user inquiry.",
+      "status": "Open",
+      "createdAt": 1774609667797,
+      "updatedAt": 1774610055652
+    },
+    {
+      "id": "1774610112472",
+      "category": "Account Services",
+      "title": "Account Update",
+      "description": "New user inquiry.",
+      "status": "Open",
+      "createdAt": 1774610112472,
+      "updatedAt": 1774610215327
+    }
+  ],
+  "messages": [
+    {
+      "id": "1774609531641-m",
+      "ticketId": "1774609531641",
+      "type": "bot",
+      "text": "Hi! You selected \"Orders and Delivery\". I am the Support Bot. How can I help you with your issue regarding Delivery Tracking?",
+      "time": "04:35 PM",
+      "timestamp": 1774609531646
+    },
+    {
+      "id": "1774609556319",
+      "ticketId": "1774609531641",
+      "type": "user",
+      "text": "Hi, I need help with my delivery.",
+      "time": "04:35 PM",
+      "timestamp": 1774609556323
+    },
+    {
+      "id": "1774609667797-m",
+      "ticketId": "1774609667797",
+      "type": "bot",
+      "text": "Hi! You selected \"Orders and Delivery\". I am the Support Bot. How can I help you with your issue regarding Delivery Tracking?",
+      "time": "04:37 PM",
+      "timestamp": 1774609667802
+    },
+    {
+      "id": "1774609668009",
+      "ticketId": "1774609667797",
+      "type": "user",
+      "text": "Hello, I need help tracking my order.",
+      "time": "04:37 PM",
+      "timestamp": 1774609668009
+    },
+    {
+      "id": "1774609669509-bot",
+      "ticketId": "1774609667797",
+      "type": "bot",
+      "text": "We have received your message and an agent will assist you shortly. Please hold on or provide any additional details.",
+      "time": "04:37 PM",
+      "timestamp": 1774609669510
+    },
+    {
+      "id": "1774610054141",
+      "ticketId": "1774609667797",
+      "type": "user",
+      "text": "hii",
+      "time": "04:44 PM",
+      "timestamp": 1774610054146
+    },
+    {
+      "id": "1774610055652-bot",
+      "ticketId": "1774609667797",
+      "type": "bot",
+      "text": "We have received your message and an agent will assist you shortly. Please hold on or provide any additional details.",
+      "time": "04:44 PM",
+      "timestamp": 1774610055652
+    },
+    {
+      "id": "1774610112472-m",
+      "ticketId": "1774610112472",
+      "type": "bot",
+      "text": "Hi! You selected \"Account Services\". I am the Support Bot. How can I help you with your issue regarding Account Update?",
+      "time": "04:45 PM",
+      "timestamp": 1774610112472
+    },
+    {
+      "id": "1774610147440",
+      "ticketId": "1774610112472",
+      "type": "user",
+      "text": "hi i need to know my payment details",
+      "time": "04:45 PM",
+      "timestamp": 1774610147440
+    },
+    {
+      "id": "1774610148945-bot",
+      "ticketId": "1774610112472",
+      "type": "bot",
+      "text": "We have received your message and an agent will assist you shortly. Please hold on or provide any additional details.",
+      "time": "04:45 PM",
+      "timestamp": 1774610148945
+    },
+    {
+      "id": "1774610213824",
+      "ticketId": "1774610112472",
+      "type": "user",
+      "text": "close",
+      "time": "04:46 PM",
+      "timestamp": 1774610213824
+    },
+    {
+      "id": "1774610215327-bot",
+      "ticketId": "1774610112472",
+      "type": "bot",
+      "text": "We have received your message and an agent will assist you shortly. Please hold on or provide any additional details.",
+      "time": "04:46 PM",
+      "timestamp": 1774610215327
+    }
+  ]
+}
