@@ -11,11 +11,107 @@ if (!fs.existsSync(dbPath)) {
 const readDB = () => JSON.parse(fs.readFileSync(dbPath, "utf-8"));
 const writeDB = (data) => fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
 
+/**
+ * @swagger
+ * tags:
+ *   name: Customer Support
+ *   description: API for managing customer support tickets and messages
+ */
+
+/**
+ * @swagger
+ * /api/support/tickets:
+ *   get:
+ *     summary: Retrieve all support tickets
+ *     tags: [Customer Support]
+ *     responses:
+ *       200:
+ *         description: A list of tickets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       category:
+ *                         type: string
+ *                       title:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                       createdAt:
+ *                         type: number
+ *                       updatedAt:
+ *                         type: number
+ */
 exports.getTickets = (req, res) => {
   const db = readDB();
   res.json({ status: "success", data: db.tickets.sort((a,b) => b.updatedAt - a.updatedAt) });
 };
 
+/**
+ * @swagger
+ * /api/support/tickets:
+ *   post:
+ *     summary: Create a new support ticket
+ *     tags: [Customer Support]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - category
+ *               - title
+ *               - description
+ *             properties:
+ *               category:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Ticket created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     category:
+ *                       type: string
+ *                     title:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                     createdAt:
+ *                       type: number
+ *                     updatedAt:
+ *                       type: number
+ */
 exports.createTicket = (req, res) => {
   const { category, title, description } = req.body;
   const db = readDB();
@@ -48,6 +144,48 @@ exports.createTicket = (req, res) => {
   res.status(201).json({ status: "success", data: newTicket });
 };
 
+/**
+ * @swagger
+ * /api/support/tickets/{id}/messages:
+ *   get:
+ *     summary: Retrieve messages for a specific ticket
+ *     tags: [Customer Support]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ticket ID
+ *     responses:
+ *       200:
+ *         description: List of messages for the ticket
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       ticketId:
+ *                         type: string
+ *                       type:
+ *                         type: string
+ *                       text:
+ *                         type: string
+ *                       time:
+ *                         type: string
+ *                       timestamp:
+ *                         type: number
+ */
 exports.getMessages = (req, res) => {
   const { id } = req.params;
   const db = readDB();
@@ -55,6 +193,57 @@ exports.getMessages = (req, res) => {
   res.json({ status: "success", data: ticketMessages });
 };
 
+/**
+ * @swagger
+ * /api/support/tickets/{id}/messages:
+ *   post:
+ *     summary: Send a message for a specific ticket
+ *     tags: [Customer Support]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ticket ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - text
+ *             properties:
+ *               text:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Message sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     ticketId:
+ *                       type: string
+ *                     type:
+ *                       type: string
+ *                     text:
+ *                       type: string
+ *                     time:
+ *                       type: string
+ *                     timestamp:
+ *                       type: number
+ */
 exports.sendMessage = (req, res) => {
   const { id } = req.params;
   const { text } = req.body;
