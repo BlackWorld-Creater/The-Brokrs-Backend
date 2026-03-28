@@ -1,0 +1,56 @@
+# Implementation Plan: Enhanced Customer Support System
+
+## Goal
+Fix the `429 Too Many Requests` error and implement a professional support flow including automated ticket assignment, chatbot engagement for 2-3 minutes, and real-time employee handover.
+
+## User Review Required
+> [!IMPORTANT]
+> - Should we continue using the monolithic backend for Support, or migrate it entirely to the `customer-support-service` microservice? I distribute the logic in the monolithic backend for now as it already has access to the `users` table and Socket.io online status.
+> - The 429 error is caused by the 3-second polling mechanism in the frontend hitting the backend's rate limit. I propose switching to **Socket.io** for real-time updates to eliminate polling and fix the error permanently.
+
+## Proposed Changes
+
+### 1. [Monolithic Backend] Rate Limit adjustment
+- **File**: [server.js](file:///d:/18032026/admin-panel-fullstack_9/erp-admin/backend/src/server.js)
+- **Change**: Create a separate, more lenient rate limiter for `/api/support/` endpoints.
+
+### 2. [Database] Schema Migration
+- **File**: `backend/src/config/migrate_support.js` [NEW]
+- **Change**: Create `support_tickets` and `support_messages` tables in PostgreSQL.
+  - `support_tickets`: `id`, `user_id` (null for guests), `category`, `title`, `description`, `status` ('open', 'in-progress', 'resolved'), `assigned_to` (UUID), `created_at`.
+  - `support_messages`: `id`, `ticket_id`, `sender_id`, `type` ('bot', 'user', 'agent'), `text`, `created_at`.
+
+### 3. [Backend] Enhanced Support Controller
+- **File**: [support.controller.js](file:///d:/18032026/admin-panel-fullstack_9/erp-admin/backend/src/controllers/support.controller.js)
+- **Changes**:
+  - Replace JSON file logic with SQL queries.
+  - **Assignment Logic**: When a ticket is created, look for the first available employee (Online + Support Role).
+  - **Bot Mode**: If no employee is assigned immediately, set a `mode` to 'bot'.
+  - **Auto-Assignment Timer**: Implement a mechanism (or logic in the polling/socket) that checks for assignment after 2 minutes.
+
+### 4. [Backend] Socket.io Integration
+- **File**: [socketServer.js](file:///d:/18032026/admin-panel-fullstack_9/erp-admin/backend/src/utils/socketServer.js)
+- **Changes**: Add events for `support:message` and `support:handover`.
+
+### 5. [Frontend] Real-time Support Chat
+- **File**: [CustomerSupportChat.jsx](file:///d:/18032026/admin-panel-fullstack_9/erp-admin/frontend/src/components/ui/CustomerSupportChat.jsx)
+- **Changes**:
+  - Replace `setInterval` polling with Socket.io listeners.
+  - Improve the UI to show "Bot is helping..." vs "Agent [Name] is typing...".
+
+## Open Questions
+- Do you have a specific role or department for employees who handle support tickets? (e.g., 'Support', 'Admin').
+- For the "2-3 minutes" wait, should the bot simply state "An agent will be with you shortly" or do you want specific automated responses based on the category?
+
+## Verification Plan
+
+### Automated Tests
+- `npm run test:backend`: Verify ticket creation and message retrieval.
+- Mock Socket.io connections to test real-time message delivery.
+
+### Manual Verification
+1. Open Support Chat in two browser windows (one as User, one as Admin).
+2. Create a ticket as User and verify the 429 error is gone.
+3. Verify the Bot greets the user immediately.
+4. Verify that the Admin receives a notification/ticket and can "Take Over" the chat.
+5. Observe the handover transition in the User's chat window.
