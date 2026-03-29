@@ -26,6 +26,15 @@
       "status": "Open",
       "createdAt": 1774610112472,
       "updatedAt": 1774610215327
+    },
+    {
+      "id": "1774689461607",
+      "category": "Orders and Delivery",
+      "title": "Delivery Tracking",
+      "description": "New user inquiry.",
+      "status": "Open",
+      "createdAt": 1774689461607,
+      "updatedAt": 1774689461607
     }
   ],
   "messages": [
@@ -124,6 +133,14 @@
       "text": "We have received your message and an agent will assist you shortly. Please hold on or provide any additional details.",
       "time": "04:46 PM",
       "timestamp": 1774610215327
+    },
+    {
+      "id": "1774689461607-m",
+      "ticketId": "1774689461607",
+      "type": "bot",
+      "text": "Hi! You selected \"Orders and Delivery\". I am the Support Bot. How can I help you with your issue regarding Delivery Tracking?",
+      "time": "02:47 pm",
+      "timestamp": 1774689461612
     }
   ]
 }

@@ -38,6 +38,13 @@ app.use('/api/auth/login', rateLimit({
   message: { success: false, message: 'Too many login attempts.' },
 }));
 
+// More lenient rate limit for support to eliminate 429
+app.use('/api/support/', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 2000, // Increased to 2000 for all support ops
+  message: { success: false, message: 'Too many support requests.' },
+}));
+
 // ─── Body Parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
