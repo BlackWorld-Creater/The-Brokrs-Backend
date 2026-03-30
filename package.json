@@ -20,6 +20,7 @@
     "migrate:v7": "node src/config/migrate_v7.js",
     "migrate:v8": "node src/config/migrate_v8.js",
     "migrate:v9": "node src/config/migrate_v9.js",
+    "migrate:v10": "node src/config/migrate_v10.js",
     "test": "jest --forceExit"
   },
   "dependencies": {

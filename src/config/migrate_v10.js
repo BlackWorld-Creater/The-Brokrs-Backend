@@ -15,7 +15,7 @@ const migrateSupport = async () => {
     await client.query(`
       INSERT INTO roles (name, slug, description, is_system)
       VALUES ('Support Agent', 'support', 'Dedicated customer support access', false)
-      ON CONFLICT (slug) DO NOTHING
+      ON CONFLICT (name) DO NOTHING
     `);
     console.log('✅ Support role ensured');
 
