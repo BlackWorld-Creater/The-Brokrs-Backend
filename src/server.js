@@ -113,6 +113,7 @@ if (config.env !== 'test') {
     console.log(`\n🚀 Admin Panel API  →  http://localhost:${PORT}`);
     console.log(`💬 Chat WebSocket  →  ws://localhost:${PORT}`);
     console.log(`💊 Health check    →  http://localhost:${PORT}/health`);
+    console.log(`📘 Swagger Docs    →  http://localhost:${PORT}/api-docs`);
     console.log(`🌍 Environment     →  ${config.env}\n`);
   });
 }
