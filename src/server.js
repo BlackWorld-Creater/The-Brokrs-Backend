@@ -31,6 +31,10 @@ app.use('/api/', rateLimit({
   max: config.rateLimit.max,
   standardHeaders: true, legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },
+  skip: (req) => {
+    // Skip global limit for authentication login and support as they have specific limiters
+    return req.originalUrl.startsWith('/api/auth/login') || req.originalUrl.startsWith('/api/support');
+  },
 }));
 
 app.use('/api/auth/login', rateLimit({
