@@ -25,11 +25,29 @@ const initSocket = (httpServer) => {
     try {
       const token = socket.handshake.auth?.token
         || socket.handshake.headers?.authorization?.replace('Bearer ', '');
-      if (!token) return next(new Error('No token'));
+      
+      if (!token) {
+        // Allow unauthenticated support guest connections
+        if (socket.handshake.query?.type === 'support_guest') {
+          socket.user = { 
+            id: 'guest-' + socket.id, 
+            first_name: 'Guest', 
+            last_name: 'User', 
+            isGuest: true 
+          };
+          return next();
+        }
+        return next(new Error('No token'));
+      }
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const r = await query(
-        `SELECT id, first_name, last_name, avatar_url, status FROM users WHERE id=$1`,
+        `SELECT u.id, u.first_name, u.last_name, u.avatar_url, u.status, array_agg(r.slug) as roles
+         FROM users u 
+         LEFT JOIN user_roles ur ON ur.user_id = u.id
+         LEFT JOIN roles r ON r.id = ur.role_id
+         WHERE u.id=$1
+         GROUP BY u.id`,
         [decoded.userId || decoded.id]
       );
       if (!r.rows.length) return next(new Error('User not found'));
@@ -42,26 +60,40 @@ const initSocket = (httpServer) => {
 
   io.on('connection', async (socket) => {
     const uid = socket.user.id;
-    console.log(`💬 Chat connect: ${socket.user.first_name} (${uid})`);
+    const isGuest = socket.user.isGuest;
 
-    /* Track online users */
-    if (!onlineUsers.has(uid)) onlineUsers.set(uid, new Set());
-    onlineUsers.get(uid).add(socket.id);
+    if (!isGuest) {
+      console.log(`💬 Chat connect: ${socket.user.first_name} (${uid})`);
+      /* Track online users */
+      if (!onlineUsers.has(uid)) onlineUsers.set(uid, new Set());
+      onlineUsers.get(uid).add(socket.id);
 
-    /* Join all rooms the user is a member of */
-    try {
-      const rooms = await query(
-        `SELECT room_id FROM chat_members WHERE user_id=$1`, [uid]
-      );
-      for (const r of rooms.rows) {
-        socket.join(`room:${r.room_id}`);
+      /* Join all rooms the user is a member of */
+      try {
+        const rooms = await query(
+          `SELECT room_id FROM chat_members WHERE user_id=$1`, [uid]
+        );
+        for (const r of rooms.rows) {
+          socket.join(`room:${r.room_id}`);
+        }
+      } catch (err) {
+        console.error('Socket room join error:', err.message);
       }
-    } catch (err) {
-      console.error('Socket room join error:', err.message);
-    }
+      /* Join personal room for targeted alerts (like assignments) */
+      socket.join(`user:${uid}`);
 
-    /* Broadcast online status */
-    socket.broadcast.emit('user:online', { userId: uid });
+      /* Broadcast online status */
+      socket.broadcast.emit('user:online', { userId: uid });
+
+      /* Join staff room if user has support/admin roles */
+      const staffRoles = ['support', 'admin', 'super-admin'];
+      if (socket.user.roles && socket.user.roles.some(r => staffRoles.includes(r))) {
+        socket.join('room:staff');
+        console.log(`🛡️ Staff joined room:staff: ${socket.user.first_name}`);
+      }
+    } else {
+      console.log(`🛎️ Support Guest connect: ${socket.id}`);
+    }
 
     /* ── Client emits ──────────────────────────────────────────── */
 
@@ -70,56 +102,47 @@ const initSocket = (httpServer) => {
       socket.join(`room:${roomId}`);
     });
 
+    /* Support Ticket Room Join */
+    socket.on('support:room:join', (ticketId) => {
+      socket.join(ticketId);
+      console.log(`🛎️ Socket ${socket.id} joined support room: ${ticketId}`);
+    });
+
     /* typing indicator */
-    socket.on('typing:start', ({ roomId }) => {
-      socket.to(`room:${roomId}`).emit('typing:start', {
+    socket.on('typing:start', ({ roomId, ticketId }) => {
+      const target = roomId ? `room:${roomId}` : ticketId;
+      socket.to(target).emit('typing:start', {
         roomId,
+        ticketId,
         userId:    uid,
         firstName: socket.user.first_name,
         lastName:  socket.user.last_name,
       });
     });
 
-    socket.on('typing:stop', ({ roomId }) => {
-      socket.to(`room:${roomId}`).emit('typing:stop', { roomId, userId: uid });
+    socket.on('typing:stop', ({ roomId, ticketId }) => {
+      const target = roomId ? `room:${roomId}` : ticketId;
+      socket.to(target).emit('typing:stop', { roomId, ticketId, userId: uid });
     });
 
     /* new message — forwarded to room (actual save done via REST) */
     socket.on('message:send', (data) => {
-      /* data = { roomId, message } — message already saved via REST API */
-      socket.to(`room:${data.roomId}`).emit('message:new', data.message);
-    });
-
-    /* message edited */
-    socket.on('message:edit', (data) => {
-      socket.to(`room:${data.roomId}`).emit('message:edited', data);
-    });
-
-    /* message deleted */
-    socket.on('message:delete', (data) => {
-      socket.to(`room:${data.roomId}`).emit('message:deleted', data);
-    });
-
-    /* reaction added/removed */
-    socket.on('reaction:toggle', (data) => {
-      socket.to(`room:${data.roomId}`).emit('reaction:update', data);
-    });
-
-    /* mark room as read */
-    socket.on('room:read', ({ roomId }) => {
-      // just broadcast so other devices of same user can update
-      socket.to(`user:${uid}`).emit('room:read', { roomId });
+      /* data = { roomId, ticketId, message } — message already saved via REST API */
+      const target = data.roomId ? `room:${data.roomId}` : data.ticketId;
+      socket.to(target).emit('message:new', data.message);
     });
 
     /* ── Disconnect ────────────────────────────────────────────── */
     socket.on('disconnect', () => {
-      const sockets = onlineUsers.get(uid);
-      if (sockets) {
-        sockets.delete(socket.id);
-        if (sockets.size === 0) {
-          onlineUsers.delete(uid);
-          io.emit('user:offline', { userId: uid });
-          console.log(`💬 Chat disconnect: ${socket.user.first_name}`);
+      if (!isGuest) {
+        const sockets = onlineUsers.get(uid);
+        if (sockets) {
+          sockets.delete(socket.id);
+          if (sockets.size === 0) {
+            onlineUsers.delete(uid);
+            io.emit('user:offline', { userId: uid });
+            console.log(`💬 Chat disconnect: ${socket.user.first_name}`);
+          }
         }
       }
     });
